@@ -24,6 +24,7 @@ public class InjectParamExtractor implements ParameterExtractor {
             }
         });
         ((ResteasyReactiveInjectionTarget) instance.getInstance()).__quarkus_rest_inject(context);
-        return instance.getInstance();
+        Object result = instance.getInstance();
+        return result;
     }
 }

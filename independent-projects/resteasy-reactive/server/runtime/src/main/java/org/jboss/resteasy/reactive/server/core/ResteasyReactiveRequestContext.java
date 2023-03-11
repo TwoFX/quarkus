@@ -68,14 +68,16 @@ public abstract class ResteasyReactiveRequestContext
     /**
      * The parameter values extracted from the path.
      * <p>
-     * This is not a map, for two reasons. One is raw performance, as an array causes
-     * less allocations and is generally faster. The other is that it is possible
-     * that you can have equivalent templates with different names. This allows the
-     * mapper to ignore the names, as everything is resolved in terms of indexes.
+     * This is not a map, for two reasons. One is raw performance, as an array
+     * causes less allocations and is generally faster. The other is that it is
+     * possible that you can have equivalent templates with different names. This
+     * allows the mapper to ignore the names, as everything is resolved in terms of
+     * indexes.
      * <p>
-     * If there is only a single path param then it is stored directly into the field,
-     * while multiple params this will be an array. This optimisation allows us to avoid
-     * allocating anything in the common case that there is zero or one path param.
+     * If there is only a single path param then it is stored directly into the
+     * field, while multiple params this will be an array. This optimisation allows
+     * us to avoid allocating anything in the common case that there is zero or one
+     * path param.
      * <p>
      * Note: those are decoded.
      */
@@ -136,8 +138,8 @@ public abstract class ResteasyReactiveRequestContext
     private OutputStream underlyingOutputStream;
     private FormData formData;
 
-    public ResteasyReactiveRequestContext(Deployment deployment,
-            ThreadSetupAction requestContext, ServerRestHandler[] handlerChain, ServerRestHandler[] abortHandlerChain) {
+    public ResteasyReactiveRequestContext(Deployment deployment, ThreadSetupAction requestContext,
+            ServerRestHandler[] handlerChain, ServerRestHandler[] abortHandlerChain) {
         super(handlerChain, abortHandlerChain, requestContext);
         this.deployment = deployment;
         this.parameters = EMPTY_ARRAY;
@@ -145,6 +147,7 @@ public abstract class ResteasyReactiveRequestContext
 
     public abstract ServerHttpRequest serverRequest();
 
+    @Override
     public abstract ServerHttpResponse serverResponse();
 
     public Deployment getDeployment() {
@@ -169,7 +172,8 @@ public abstract class ResteasyReactiveRequestContext
     public void restart(RuntimeResource target, boolean setLocatorTarget) {
         this.handlers = target.getHandlerChain();
         position = 0;
-        parameters = target.getParameterTypes().length == 0 ? EMPTY_ARRAY : new Object[target.getParameterTypes().length];
+        parameters = target.getParameterTypes().length == 0 ? EMPTY_ARRAY
+                : new Object[target.getParameterTypes().length];
         if (setLocatorTarget) {
             setProperty(PreviousResource.PROPERTY_KEY, new PreviousResource(this.target, pathParamValues,
                     (PreviousResource) getProperty(PreviousResource.PROPERTY_KEY)));
@@ -192,8 +196,8 @@ public abstract class ResteasyReactiveRequestContext
     }
 
     /**
-     * Resets the build time serialization assumptions. Called if a filter
-     * modifies the response
+     * Resets the build time serialization assumptions. Called if a filter modifies
+     * the response
      */
     public void resetBuildTimeSerialization() {
         entityWriter = deployment.getDynamicEntityWriter();
@@ -286,6 +290,7 @@ public abstract class ResteasyReactiveRequestContext
         return result;
     }
 
+    @Override
     public Throwable getThrowable() {
         return throwable;
     }
@@ -328,7 +333,8 @@ public abstract class ResteasyReactiveRequestContext
     }
 
     public void mapExceptionIfPresent() {
-        // this is called from the abort chain, but we can abort because we have a Response, or because
+        // this is called from the abort chain, but we can abort because we have a
+        // Response, or because
         // we got an exception
         if (throwable != null) {
             this.responseContentType = null;
@@ -422,7 +428,8 @@ public abstract class ResteasyReactiveRequestContext
         if (path != null) {
             String prefix = deployment.getPrefix();
             if (!prefix.isEmpty()) {
-                // FIXME: can we really have paths that don't start with the prefix if there's a prefix?
+                // FIXME: can we really have paths that don't start with the prefix if there's a
+                // prefix?
                 if (path.startsWith(prefix)) {
                     return path.substring(prefix.length());
                 }
@@ -445,7 +452,8 @@ public abstract class ResteasyReactiveRequestContext
         // if we never changed the path we can use the vert.x URI
         if (path == null)
             return serverRequest().getRequestAbsoluteUri();
-        // Note: we could store our cache as normalised, but I'm not sure if the vertx one is normalised
+        // Note: we could store our cache as normalised, but I'm not sure if the vertx
+        // one is normalised
         if (absoluteUri == null) {
             try {
                 absoluteUri = new URI(scheme, authority, path, null, null).toASCIIString();
@@ -484,9 +492,9 @@ public abstract class ResteasyReactiveRequestContext
     }
 
     /**
-     * Returns the current response content type. If a response has been set and has an
-     * explicit content type then this is used, otherwise it returns any content type
-     * that has been explicitly set.
+     * Returns the current response content type. If a response has been set and has
+     * an explicit content type then this is used, otherwise it returns any content
+     * type that has been explicitly set.
      */
     @Override
     public EncodedMediaType getResponseContentType() {
@@ -618,6 +626,7 @@ public abstract class ResteasyReactiveRequestContext
         return this;
     }
 
+    @Override
     protected void handleUnrecoverableError(Throwable throwable) {
         log.error("Request failed", throwable);
         if (serverResponse().headWritten()) {
@@ -628,6 +637,7 @@ public abstract class ResteasyReactiveRequestContext
         close();
     }
 
+    @Override
     protected void handleRequestScopeActivation() {
         CurrentRequestManager.set(this);
     }
@@ -649,18 +659,21 @@ public abstract class ResteasyReactiveRequestContext
         if (matchedURIs == null) {
             matchedURIs = new LinkedList<>();
         } else if (matchedURIs.get(0).resource == target) {
-            //already saved
+            // already saved
             return;
         }
         if (target != null) {
             URITemplate classPath = target.getClassPath();
             if (classPath != null) {
-                //this is not great, but the alternative is to do path based matching on every request
-                //given that this method is likely to be called very infrequently it is better to have a small
-                //cost here than a cost applied to every request
+                // this is not great, but the alternative is to do path based matching on every
+                // request
+                // given that this method is likely to be called very infrequently it is better
+                // to have a small
+                // cost here than a cost applied to every request
                 int pos = classPath.stem.length();
                 String path = getPathWithoutPrefix();
-                //we already know that this template matches, we just need to find the matched bit
+                // we already know that this template matches, we just need to find the matched
+                // bit
                 for (int i = 1; i < classPath.components.length; ++i) {
                     URITemplate.TemplateComponent segment = classPath.components[i];
                     if (segment.type == URITemplate.Type.LITERAL) {
@@ -688,8 +701,9 @@ public abstract class ResteasyReactiveRequestContext
         if (path.equals(remaining)) {
             matchedURIs.add(0, new UriMatch(path.substring(1), target, endpointInstance));
         } else {
-            matchedURIs.add(0, new UriMatch(path.substring(1, path.length() - (remaining == null ? 0 : remaining.length())),
-                    target, endpointInstance));
+            matchedURIs.add(0,
+                    new UriMatch(path.substring(1, path.length() - (remaining == null ? 0 : remaining.length())),
+                            target, endpointInstance));
         }
 
     }
@@ -703,6 +717,7 @@ public abstract class ResteasyReactiveRequestContext
         return inputStream != null;
     }
 
+    @Override
     public InputStream getInputStream() {
         if (inputStream == null) {
             inputStream = serverRequest().createInputStream();
@@ -746,15 +761,15 @@ public abstract class ResteasyReactiveRequestContext
     }
 
     /**
-     * initializes the path segments and removes any matrix params for the path
-     * used for matching.
+     * initializes the path segments and removes any matrix params for the path used
+     * for matching.
      */
     public void initPathSegments() {
         if (getPathSegments0() != null) {
             return;
         }
-        //this is not super optimised
-        //I don't think we care about it that much though
+        // this is not super optimised
+        // I don't think we care about it that much though
         String path = getPath();
         String[] parts = path.split("/");
         List<PathSegment> pathSegments = new ArrayList<>();
@@ -805,14 +820,23 @@ public abstract class ResteasyReactiveRequestContext
         }
     }
 
-    @Override
     public Object getQueryParameter(String name, boolean single, boolean encoded) {
+        return getQueryParameter(name, single, encoded, null);
+    }
+
+    @Override
+    public Object getQueryParameter(String name, boolean single, boolean encoded, String separator) {
         if (single) {
             String val = serverRequest().getQueryParam(name);
             if (encoded && val != null) {
                 val = Encode.encodeQueryParam(val);
             }
-            return val;
+            if (separator != null) {
+                String[] parts = val.split(separator);
+                return new ArrayList<>(Arrays.asList(parts));
+            } else {
+                return val;
+            }
         }
         // empty collections must not be turned to null
         List<String> strings = serverRequest().getAllQueryParams(name);
@@ -821,9 +845,19 @@ public abstract class ResteasyReactiveRequestContext
             for (String i : strings) {
                 newStrings.add(Encode.encodeQueryParam(i));
             }
-            return newStrings;
+            strings = newStrings;
         }
-        return strings;
+
+        if (separator != null) {
+            List<String> result = new ArrayList<>(strings.size());
+            for (int i = 0; i < strings.size(); i++) {
+                String[] parts = strings.get(i).split(separator);
+                result.addAll(Arrays.asList(parts));
+            }
+            return result;
+        } else {
+            return strings;
+        }
     }
 
     @Override
@@ -896,8 +930,10 @@ public abstract class ResteasyReactiveRequestContext
 
     @Override
     public String getPathParameter(String name, boolean encoded) {
-        // this is a slower version than getPathParam, but we can't actually bake path indices inside
-        // BeanParam classes (which use thismethod ) because they can be used by multiple resources that would have different
+        // this is a slower version than getPathParam, but we can't actually bake path
+        // indices inside
+        // BeanParam classes (which use thismethod ) because they can be used by
+        // multiple resources that would have different
         // indices
         Integer index = target.getPathParameterIndexes().get(name);
         String value;
@@ -908,7 +944,8 @@ public abstract class ResteasyReactiveRequestContext
             value = getResourceLocatorPathParam(name);
         }
 
-        // It's possible to inject a path param that's not defined, return null in this case
+        // It's possible to inject a path param that's not defined, return null in this
+        // case
         if (encoded && value != null) {
             return Encode.encodeQueryParam(value);
         }
@@ -916,6 +953,7 @@ public abstract class ResteasyReactiveRequestContext
         return value;
     }
 
+    @Override
     public <T> T unwrap(Class<T> type) {
         return serverRequest().unwrap(type);
     }
@@ -953,6 +991,7 @@ public abstract class ResteasyReactiveRequestContext
         return outputStream;
     }
 
+    @Override
     public OutputStream getOrCreateOutputStream() {
         if (outputStream == null) {
             return outputStream = underlyingOutputStream = serverResponse().createResponseOutputStream();
@@ -1039,16 +1078,17 @@ public abstract class ResteasyReactiveRequestContext
         }
 
         /**
-         * When a subresource has been located and the processing has been restarted (and thus target point to the new
-         * subresource),
-         * this field contains the target that resulted in the offloading to the new target
+         * When a subresource has been located and the processing has been restarted
+         * (and thus target point to the new subresource), this field contains the
+         * target that resulted in the offloading to the new target
          */
         private final RuntimeResource locatorTarget;
 
         /**
-         * When a subresource has been located and the processing has been restarted (and thus target point to the new
-         * subresource),
-         * this field contains the pathParamValues of the target that resulted in the offloading to the new target
+         * When a subresource has been located and the processing has been restarted
+         * (and thus target point to the new subresource), this field contains the
+         * pathParamValues of the target that resulted in the offloading to the new
+         * target
          */
         private final Object locatorPathParamValues;
 

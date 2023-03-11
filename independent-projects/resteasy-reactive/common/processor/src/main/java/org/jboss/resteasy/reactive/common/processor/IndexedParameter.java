@@ -29,13 +29,11 @@ public class IndexedParameter<T extends IndexedParameter<T>> {
     protected String elementType;
     protected boolean single;
     protected boolean optional;
+    protected String separator;
 
     public boolean isObtainedAsCollection() {
-        return !single
-                && (type == ParameterType.HEADER
-                        || type == ParameterType.MATRIX
-                        || type == ParameterType.FORM
-                        || type == ParameterType.QUERY);
+        return !single && (type == ParameterType.HEADER || type == ParameterType.MATRIX || type == ParameterType.FORM
+                || type == ParameterType.QUERY);
     }
 
     public ClassInfo getCurrentClassInfo() {
@@ -206,6 +204,15 @@ public class IndexedParameter<T extends IndexedParameter<T>> {
 
     public T setOptional(boolean optional) {
         this.optional = optional;
+        return (T) this;
+    }
+
+    public String getSeparator() {
+        return separator;
+    }
+
+    public T setSeparator(String separator) {
+        this.separator = separator;
         return (T) this;
     }
 }
